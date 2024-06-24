@@ -59,8 +59,6 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("Re-write your text in different styles.")
 
-with col2:
-    st.write("Contact with [AI Accelera](https://aiaccelera.com) to build your AI Projects")
 
 # Input OpenAI API Key
 st.markdown("## Enter Your OpenAI API Key")

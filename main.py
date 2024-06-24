@@ -1,9 +1,12 @@
 import streamlit as st
+import pyperclip
 from langchain.prompts.prompt import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain_groq.chat_models import ChatMessage
+from langchain.chains import LLMChain
 
-template = """
+
+prompt_template = """
 Below is a draft text that may be poorly worded
 Your goal is to:
 - Properly redact the draft text
@@ -33,7 +36,11 @@ Here are some examples different Stylistic Preferences:
 - Professional - Dear colleagues, I am pleased to announce that following our recent meetings, we have finalized the decision to adopt new industry standards.
 - Empathetic: Hi team, I understand there have been many questions, so I wanted to personally inform you that after careful consideration, we will be updating our health benefits package.
 
-Please start the redaction with a warm introduction. Add the introduction if you need to.
+Please start the redaction with a warm introduction. Add the introduction if you need to. The response should only contain the changed message and nothing else.
+
+Example:
+- Draft: Do i have to be present on Saturday, because i am going to attend a competition about some robot building ?
+- Output: Hey teacher, hope you're doing great! I just wanted to check in with you about Saturday's schedule. I've got a super cool robot building competition that I'm really excited to attend, and I was wondering if I need to be present in class that day. I've been working hard on my robot and I'd love to show it off! If it's okay with you, I'd really appreciate it if I could take the day off to focus on the competition. Let me know either way, thanks so much!
 
 Below is the draft text, tone, and dialect:
 DRAFT: {draft}
@@ -46,11 +53,50 @@ STYLISTIC PREFERENCES: {style}
 YOUR RESPONSE:
 """
 
+# output_template = """
+# Given is a draft text that is poorly generated and has some additional content
+# Your goal is to:
+# - Removed the additional content
+# - Keep the core message as it is
+
+# The input generally consists of some starting directive like 
+# "Here is the rewritten text:" 
+# and some ending points like 
+# "This rewritten text meets the specified requirements:
+
+# Tone: Informal
+# Target Audience: Teacher
+# Level of Formality: Low
+# Length: 100 words
+# Stylistic Preferences: Assertive"
+
+# A simple example is as follows:
+# - Input
+# Here is the rewritten text:
+
+# Hey [Teacher's Name], hope you're doing well! I've got a question about Saturday's schedule. I'm actually participating in a robot-building competition that day and I was wondering if I really need to be present in class. I've been working hard on this project and it's a great opportunity for me to showcase my skills. I'll make sure to catch up on any material I miss, but I'd really appreciate it if I could take the day off. Let me know either way, thanks!
+
+# This rewritten text meets the specified requirements:
+
+# Tone: Informal
+# Target Audience: Teacher
+# Level of Formality: Low
+# Length: 100 words
+# Stylistic Preferences: Assertive
+
+# - Required Output
+# Hey [Teacher's Name], hope you're doing well! I've got a question about Saturday's schedule. I'm actually participating in a robot-building competition that day and I was wondering if I really need to be present in class. I've been working hard on this project and it's a great opportunity for me to showcase my skills. I'll make sure to catch up on any material I miss, but I'd really appreciate it if I could take the day off. Let me know either way, thanks!
+# """
+
 # PromptTemplate variables definition
-prompt = PromptTemplate(
+prompt1 = PromptTemplate(
     input_variables=["draft", "tone", "audience", "formality", "length", "style"],
-    template=template,
+    template=prompt_template,
 )
+# prompt2 = PromptTemplate(
+#     # input_variables=["input"],
+#     template=output_template,
+# )
 
 # LLM and key loading function
 def load_LLM(groq_api_key):
@@ -61,15 +107,33 @@ def load_LLM(groq_api_key):
     )
     return llm
 
+# def createChain(llm):
+#     chain_one = LLMChain(
+#         llm=llm, 
+#         prompt=prompt1, 
+#         output_key="input"
+#     )
+#     chain_two = LLMChain(
+#         llm=llm, 
+#         prompt=prompt2, 
+#         output_key="final"
+#     )
+    
+#     overall_chain = SequentialChain(
+#         chains=[chain_one, chain_two, chain_three, chain_four],
+#         input_variables=["draft", "tone", "audience", "formality", "length", "style"],
+#         output_variables=["input"],
+#     )
+    
+#     return overall_chain
+    
+    
 # Page title and header
-st.set_page_config(page_title="Re-write your text")
-st.header("Re-write your text")
+st.set_page_config(page_title="ReWriteAI")
+st.markdown("<h1 style='text-align: center; font-size:5rem;'>ReWriteAI</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size:1rem; font-weight: 200;'>Re-write your text using various customisations and the power of LLM's</p>", unsafe_allow_html=True)
 
-# Intro: instructions
-st.markdown("Re-write your text in different styles.")
-
-
-# Input OpenAI API Key
+# Input Groq API Key
 st.markdown("## Enter Your Groq API Key")
 
 def get_groq_api_key():
@@ -95,7 +159,7 @@ if len(draft_input.split(" ")) > 700:
 col1, col2 = st.columns(2)
 with col1:
     option_tone = st.selectbox(
-        'Which tone would you like your redaction to have?',
+        'Which tone would you like to have?',
         ('Formal', 'Informal'))
     
     option_formality = st.selectbox(
@@ -114,14 +178,40 @@ with col2:
     option_length = st.selectbox(
         'How long should the response be?',
         ('100 words', '200 words', '500 words'))
+    
+    st.markdown("""
+    <style>
+    .stButton>button {
+        width: 100%;
+        margin-top: 0.7em;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    submit = st.button('Submit')
 
 # Output
-st.markdown("### Your Re-written text:")
+def runQuery():
+    
+    
+    
+    try:
+        # Call the function or statement that might raise the errors
+        llm = load_LLM(groq_api_key)
+    
+    except AuthenticationError as e:
+        # Handle AuthenticationError (401 - Invalid API Key)
+        st.error(f"AuthenticationError: {e}")
 
-if draft_input and groq_api_key:
-    llm = load_LLM(groq_api_key)
+    except ValidationError as e:
+        # Handle ValidationError (Missing API Key)
+        st.error(f"ValidationError: {e}")
+        
+    except Exception as e:
+        # Handle other unexpected exceptions
+        st.error(f"An error occurred: {e}")
 
-    formatted_prompt = prompt.format(
+    formatted_prompt1 = prompt1.format(
         tone=option_tone, 
         audience=option_audience,
         formality=option_formality,
@@ -133,7 +223,7 @@ if draft_input and groq_api_key:
     # Creating message objects
     messages = [
         ChatMessage(role="system", content="You are a helpful assistant."),
-        ChatMessage(role="user", content=formatted_prompt)
+        ChatMessage(role="user", content=formatted_prompt1)
     ]
 
     # Debugging output to verify structure
@@ -144,9 +234,18 @@ if draft_input and groq_api_key:
     # Pass the messages to the llm function
     try:
         improved_redaction = llm(messages)
-        st.write(improved_redaction.content)
+        message_content = improved_redaction.content
+        
+        st.write(message_content)       
+            
     except TypeError as e:
         st.error(f"TypeError: {e}")
         st.write("Messages passed to llm:")
         for msg in messages:
             st.write(type(msg), msg)
+            
+            
+st.markdown("### Your Re-written text:")
+if(submit):
+    runQuery()
+    

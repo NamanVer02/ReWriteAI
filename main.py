@@ -4,48 +4,60 @@ from langchain_groq import ChatGroq
 from langchain_groq.chat_models import ChatMessage
 
 template = """
-Below is a draft text that may be poorly worded.
+Below is a draft text that may be poorly worded
 Your goal is to:
 - Properly redact the draft text
 - Convert the draft text to a specified tone
-- Convert the draft text to a specified dialect
+- Convert the draft text for a specified target audience
+- Convert the draft text to the specified level of formality
+- Convert the draft text to a specified length in words
+- Convert the draft text with the stylistic preferences
 
 Here are some examples different Tones:
-- Formal: Greetings! OpenAI has announced that Sam Altman is rejoining the company as its Chief Executive Officer. After a period of five days of conversations, discussions, and deliberations, the decision to bring back Altman, who had been previously dismissed, has been made. We are delighted to welcome Sam back to OpenAI.
-- Informal: Hey everyone, it's been a wild week! We've got some exciting news to share - Sam Altman is back at OpenAI, taking up the role of chief executive. After a bunch of intense talks, debates, and convincing, Altman is making his triumphant return to the AI startup he co-founded.  
+- Formal: Greetings! After a period of five days of conversations, discussions, and deliberations, the decision to implement the new corporate strategy has been made. We are delighted to announce this development.
+- Informal: Hey everyone, it's been a wild week! We've got some exciting news to share - we're launching a new team initiative. After a bunch of intense talks, debates, and convincing, we're finally moving forward with it.
 
-Here are some examples of words in different dialects:
-- American: French Fries, cotton candy, apartment, garbage, cookie, green thumb, parking lot, pants, windshield
-- British: chips, candyfloss, flag, rubbish, biscuit, green fingers, car park, trousers, windscreen
+Here are some examples different Target Audience:
+- Teacher: Dear Mr. Smith, I wanted to inform you that the school board has decided to implement a new curriculum after a series of thorough discussions.
+- Boss: Ms. Johnson, I am pleased to share that our department will be adopting a new project management tool following extensive deliberations.
+- Professor: Professor Davis, I wanted to update you that the university has approved the new research guidelines after a period of comprehensive discussions.
 
-Example Sentences from each dialect:
-- American: Greetings! OpenAI has announced that Sam Altman is rejoining the company as its Chief Executive Officer. After a period of five days of conversations, discussions, and deliberations, the decision to bring back Altman, who had been previously dismissed, has been made. We are delighted to welcome Sam back to OpenAI.
-- British: On Wednesday, OpenAI, the esteemed artificial intelligence start-up, announced that Sam Altman would be returning as its Chief Executive Officer. This decisive move follows five days of deliberation, discourse and persuasion, after Altman's abrupt departure from the company which he had co-established.
+Here are some examples different Level of Formality:
+- Low: Hey everyone, just a heads up that we're launching a new team initiative after some intense talks!
+- Medium: Hi team, I'm excited to announce that after several days of discussions, we are implementing a new office policy.
+- High: Greetings, I am delighted to inform you that after a thorough deliberation process, we will be introducing a new corporate strategy.
+
+Here are some examples different Stylistic Preferences:
+- Friendly: Hey folks, great news! After a week of talks, we're rolling out a new company perk.
+- Assertive: Attention team, after decisive discussions, we will be enforcing the new security protocols immediately.
+- Professional - Dear colleagues, I am pleased to announce that following our recent meetings, we have finalized the decision to adopt new industry standards.
+- Empathetic: Hi team, I understand there have been many questions, so I wanted to personally inform you that after careful consideration, we will be updating our health benefits package.
 
 Please start the redaction with a warm introduction. Add the introduction if you need to.
 
 Below is the draft text, tone, and dialect:
 DRAFT: {draft}
 TONE: {tone}
-DIALECT: {dialect}
+TARGET AUDIENCE: {audience}
+LEVEL OF FORMALITY: {formality}
+LENGTH: {length}
+STYLISTIC PREFERENCES: {style}
 
-YOUR {dialect} RESPONSE:
+YOUR RESPONSE:
 """
 
 # PromptTemplate variables definition
 prompt = PromptTemplate(
-    input_variables=["tone", "dialect", "draft"],
+    input_variables=["draft", "tone", "audience", "formality", "length", "style"],
     template=template,
 )
 
 # LLM and key loading function
-def load_LLM(openai_api_key):
-    """Logic for loading the chain you want to use should go here."""
-    # Make sure your openai_api_key is set as an environment variable
+def load_LLM(groq_api_key):
     llm = ChatGroq(
-        temperature=0.3,
+        temperature=0.2,
         model="llama3-70b-8192",
-        api_key=openai_api_key
+        api_key=groq_api_key
     )
     return llm
 
@@ -54,17 +66,17 @@ st.set_page_config(page_title="Re-write your text")
 st.header("Re-write your text")
 
 # Intro: instructions
-st.markdown("### Re-write your text in different styles.")
+st.markdown("Re-write your text in different styles.")
 
 
 # Input OpenAI API Key
-st.markdown("## Enter Your OpenAI API Key")
+st.markdown("## Enter Your Groq API Key")
 
-def get_openai_api_key():
-    input_text = st.text_input(label="OpenAI API Key ", placeholder="Ex: sk-2twmA8tfCb8un4...", key="openai_api_key_input", type="password")
+def get_groq_api_key():
+    input_text = st.text_input(label="Groq API Key ", placeholder="Ex: sk-2twmA8tfCb8un4...", key="groq_api_key_input", type="password")
     return input_text
 
-openai_api_key = get_openai_api_key()
+groq_api_key = get_groq_api_key()
 
 # Input
 st.markdown("## Enter the text you want to re-write")
@@ -86,20 +98,35 @@ with col1:
         'Which tone would you like your redaction to have?',
         ('Formal', 'Informal'))
     
-with col2:
-    option_dialect = st.selectbox(
-        'Which English Dialect would you like?',
-        ('American', 'British'))
+    option_formality = st.selectbox(
+        'What formality level would you prefer?',
+        ('Low', 'Medium', 'High'))
+    
+    option_style = st.selectbox(
+        'What kind of style do you want the response in?',
+        ('Friendly', 'Assertive', 'Professional', 'Empathetic'))
+    
+with col2:   
+    option_audience = st.selectbox(
+        'Who is your target audience?',
+        ('Teacher', 'Boss', 'Professor'))
+    
+    option_length = st.selectbox(
+        'How long should the response be?',
+        ('100 words', '200 words', '500 words'))
 
 # Output
 st.markdown("### Your Re-written text:")
 
-if draft_input and openai_api_key:
-    llm = load_LLM(openai_api_key=openai_api_key)
+if draft_input and groq_api_key:
+    llm = load_LLM(groq_api_key)
 
     formatted_prompt = prompt.format(
         tone=option_tone, 
-        dialect=option_dialect, 
+        audience=option_audience,
+        formality=option_formality,
+        length=option_length,
+        style=option_style, 
         draft=draft_input
     )
 

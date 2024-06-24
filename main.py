@@ -134,7 +134,7 @@ st.markdown("<h1 style='text-align: center; font-size:5rem;'>ReWriteAI</h1>", un
 st.markdown("<p style='text-align: center; font-size:1rem; font-weight: 200;'>Re-write your text using various customisations and the power of LLM's</p>", unsafe_allow_html=True)
 
 # Input Groq API Key
-st.markdown("## Enter Your Groq API Key")
+st.markdown("<a style='text-decoration: none; font-size: 2.5rem; font-weight: 600; color:#FFFFFF;' href='https://docs.aicontentlabs.com/articles/groq-api-key/'>Enter Your Groq API Key</a>", unsafe_allow_html=True)
 
 def get_groq_api_key():
     input_text = st.text_input(label="Groq API Key ", placeholder="Ex: sk-2twmA8tfCb8un4...", key="groq_api_key_input", type="password")
@@ -189,27 +189,17 @@ with col2:
     """, unsafe_allow_html=True)
     
     submit = st.button('Submit')
-
+    
 # Output
 def runQuery():
+    if not groq_api_key:
+        st.warning('Please insert Groq API Key. \
+            Instructions [here](https://docs.aicontentlabs.com/articles/groq-api-key/)', 
+            icon="⚠️")
+        st.stop()
     
-    
-    
-    try:
-        # Call the function or statement that might raise the errors
-        llm = load_LLM(groq_api_key)
-    
-    except AuthenticationError as e:
-        # Handle AuthenticationError (401 - Invalid API Key)
-        st.error(f"AuthenticationError: {e}")
 
-    except ValidationError as e:
-        # Handle ValidationError (Missing API Key)
-        st.error(f"ValidationError: {e}")
-        
-    except Exception as e:
-        # Handle other unexpected exceptions
-        st.error(f"An error occurred: {e}")
+    llm = load_LLM(groq_api_key)
 
     formatted_prompt1 = prompt1.format(
         tone=option_tone, 

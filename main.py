@@ -1,5 +1,4 @@
 import streamlit as st
-import pyperclip
 from langchain.prompts.prompt import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain_groq.chat_models import ChatMessage

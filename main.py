@@ -99,11 +99,11 @@ prompt1 = PromptTemplate(
 # )
 
 # LLM and key loading function
-def load_LLM(groq_api_key):
+def load_LLM():
     llm = ChatGroq(
         temperature=0.2,
         model="llama3-70b-8192",
-        api_key=groq_api_key
+        api_key=st.secrets["GROQ_API_KEY"]
     )
     return llm
 
@@ -132,15 +132,6 @@ def load_LLM(groq_api_key):
 st.set_page_config(page_title="ReWriteAI")
 st.markdown("<h1 style='text-align: center; font-size:5rem;'>ReWriteAI</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; font-size:1rem; font-weight: 200;'>Re-write your text using various customisations and the power of LLM's</p>", unsafe_allow_html=True)
-
-# Input Groq API Key
-st.markdown("<a style='text-decoration: none; font-size: 2.5rem; font-weight: 600; color:#FFFFFF;' href='https://docs.aicontentlabs.com/articles/groq-api-key/'>Enter Your Groq API Key</a>", unsafe_allow_html=True)
-
-def get_groq_api_key():
-    input_text = st.text_input(label="Groq API Key ", placeholder="Ex: sk-2twmA8tfCb8un4...", key="groq_api_key_input", type="password")
-    return input_text
-
-groq_api_key = get_groq_api_key()
 
 # Input
 st.markdown("## Enter the text you want to re-write")
@@ -192,14 +183,7 @@ with col2:
     
 # Output
 def runQuery():
-    if not groq_api_key:
-        st.warning('Please insert Groq API Key. \
-            Instructions [here](https://docs.aicontentlabs.com/articles/groq-api-key/)', 
-            icon="⚠️")
-        st.stop()
-    
-
-    llm = load_LLM(groq_api_key)
+    llm = load_LLM()
 
     formatted_prompt1 = prompt1.format(
         tone=option_tone, 

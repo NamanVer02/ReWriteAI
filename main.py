@@ -167,7 +167,7 @@ with col2:
     
     option_length = st.selectbox(
         'How long should the response be?',
-        ('100 words', '200 words', '500 words'))
+        ('50 words', '100 words', '200 words', '500 words'))
     
     st.markdown("""
     <style>
